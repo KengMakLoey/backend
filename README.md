@@ -1,2 +1,2 @@
 # backend
-A repository for backend development of Nakornping Q by KengMakLoey Team
+Backend development of Nakornping Q project by KengMakLoey Team, a prototype queueing system for Nakornping Hospital.

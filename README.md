@@ -13,3 +13,9 @@ backend
 2. สร้างไฟล์ .example แล้ว copy ข้อมูลมาจาก .npmrc.example จากนั้น uncomment shell ที่ตัวเองใช้
 3. pnpm install
 4. pnpm run dev
+
+DBeaver Connection
+MySQL port 3306
+database: mydb
+username: root
+password: password

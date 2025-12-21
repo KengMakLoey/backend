@@ -9,7 +9,7 @@ DB
 (ถ้า database schema มีการเปลี่ยนแปลงให้ docker compose down -v แล้วเริ่มตั้งแต่ข้อ1.ใหม่)
 
 backend
-1. ลบ .example ออกจากชื่อไฟล์ .env.example
-2. ลบ .example ออกจากชื่อไฟล์ .npmrc.example (แล้ว uncomment shell ที่ตัวเองใช้)
+1. สร้างไฟล์ .env แล้ว copy ข้อมูลมาจาก .env.example
+2. สร้างไฟล์ .example แล้ว copy ข้อมูลมาจาก .npmrc.example จากนั้น uncomment shell ที่ตัวเองใช้
 3. pnpm install
 4. pnpm run dev

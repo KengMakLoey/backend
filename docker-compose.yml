@@ -1,0 +1,19 @@
+name: NakornpingQ
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nakornpingq-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
+    ports:
+      - "3306:3306"
+    volumes:
+      - nakornpingq-mysql-data:/var/lib/mysql
+
+volumes:
+  nakornpingq-mysql-data:

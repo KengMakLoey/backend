@@ -1,0 +1,48 @@
+name: NakornpingQ
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nakornpingq-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
+    ports:
+      - "3306:3306"
+    volumes:
+      - nakornpingq-mysql-data:/var/lib/mysql
+    networks:
+      - nakornpingq-net
+
+  backend:
+    container_name: nakornpingq-backend
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      # Database (MySQL)
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: mydb
+      DB_USER: appuser
+      DB_PASSWORD: apppass
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - nakornpingq-net
+
+volumes:
+  nakornpingq-mysql-data:
+
+networks:
+  nakornpingq-net:
+    driver: bridge

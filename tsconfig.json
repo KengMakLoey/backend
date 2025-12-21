@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    /* ===== Runtime Target ===== */
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    /* ===== Paths / Structure ===== */
+    "rootDir": "./",
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@db/*": ["db/*"]
+    },
+
+    /* ===== Interop (แก้ error express/cors/morgan) ===== */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* ===== Type Safety ===== */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* ===== Quality of Life ===== */
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+
+  "include": [
+    "src/**/*",
+    "db/**/*"
+  ]
+}

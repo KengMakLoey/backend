@@ -2,8 +2,14 @@
 Backend development of Nakornping Q project by KengMakLoey Team, a prototype queueing system for Nakornping Hospital.
 
 ## Setup
-1. Make sure that you already have DB running.
-2. Make .env from .env.example (fillin the password)
-3. Make .npmrc from .npmrc.example (adjust your shell accordingly)
-4. pnpm install
-5. pnpm run dev
+DB
+1. docker compose up -d 
+2. npm run db:generate
+3. npm run db:push
+(ถ้า database schema มีการเปลี่ยนแปลงให้ docker compose down -v แล้วเริ่มตั้งแต่ข้อ1.ใหม่)
+
+backend
+1. ลบ .example ออกจากชื่อไฟล์ .env.example
+2. ลบ .example ออกจากชื่อไฟล์ .npmrc.example (แล้ว uncomment shell ที่ตัวเองใช้)
+3. pnpm install
+4. pnpm run dev

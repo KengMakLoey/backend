@@ -42,6 +42,9 @@ export const queue = mysqlTable("queue", {
   queueNumber: varchar("queue_number", { length: 255 }),
   visitId: int("visit_id").unique().notNull().references(() => visit.visitId),
   departmentId: int("department_id").notNull().references(() => department.departmentId),
+  queueToken: varchar("queue_token", { length: 64 }).unique(), // QR Code (UUID)
+  isSkipped: boolean("is_skipped").default(false),          
+  priorityScore: int("priority_score").default(0),      
   status: varchar("status", { length: 255 }),
   issuedTime: datetime("issued_time"),
   calledTime: datetime("called_time"),

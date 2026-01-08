@@ -10,7 +10,7 @@ DB
 
 backend
 1. สร้างไฟล์ .env แล้ว copy ข้อมูลมาจาก .env.example
-2. สร้างไฟล์ .example แล้ว copy ข้อมูลมาจาก .npmrc.example จากนั้น uncomment shell ที่ตัวเองใช้
+2. สร้างไฟล์ .example แล้ว copy ข้อมูลมาจาก .npmrc.example จากนั้น uncomment shell ที่ตัวเองใช้ (CRLF -> LF)
 3. pnpm install
 4. pnpm run dev
 

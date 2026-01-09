@@ -14,6 +14,7 @@ export const patient = mysqlTable("patient", {
   hn: varchar("hn", { length: 255 }).unique().notNull(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
+  phone_number: varchar("phone_number", { length: 20 }),
   createdAt: datetime("created_at"),
 });
 

@@ -33,6 +33,7 @@ export const visit = mysqlTable("visit", {
   visitId: int("visit_id").primaryKey().autoincrement(),
   vn: varchar("vn", { length: 255 }).unique().notNull(),
   patientId: int("patient_id").notNull().references(() => patient.patientId),
+  visit_type: varchar("visit_type", { length: 255 }),
   visitDate: date("visit_date"),
   createdAt: datetime("created_at"),
 });

@@ -67,6 +67,8 @@ export const staff = mysqlTable("staff", {
   staffName: varchar("staff_name", { length: 255 }),
   role: varchar("role", { length: 255 }),
   departmentId: int("department_id").references(() => department.departmentId),
+  username: varchar("username", { length: 50 }).unique(),
+  password: varchar("password", { length: 255 }), // ในงานจริงควรเข้ารหัส
 });
 
 // 7. Notification

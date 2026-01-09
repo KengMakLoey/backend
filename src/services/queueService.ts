@@ -87,8 +87,16 @@ export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
   try {
     const [queues]: any = await connection.execute(
-      `SELECT q.queue_id, q.queue_number, q.status, q.issued_time, q.is_skipped, q.priority_score,
-              v.vn, CONCAT(p.first_name, ' ', p.last_name) as patient_name
+      `SELECT 
+        q.queue_id, 
+        q.queue_number, 
+        q.status, 
+        q.issued_time, 
+        q.is_skipped, 
+        q.priority_score,
+        v.vn, 
+        CONCAT(p.first_name, ' ', p.last_name) as patient_name,
+        p.phone_number  -- ⭐ ADD THIS LINE
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
@@ -101,6 +109,7 @@ export async function getDepartmentQueues(departmentId: number) {
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,
+      phoneNumber: q.phone_number || 'ไม่มีข้อมูล',  // ⭐ ADD THIS LINE
       vn: q.vn,
       status: q.status,
       issuedTime: new Date(q.issued_time).toLocaleTimeString("th-TH", {

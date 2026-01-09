@@ -29,7 +29,8 @@
     "start": "node ./dist/src/index.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "seed": "tsx ./db/seed.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -249,10 +249,12 @@ router.post("/queue/:queueId/skip", async (req: Request, res: Response) => {
 
     await connection.beginTransaction();
 
+    // Get queue info with patient phone number
     const [rows]: any = await connection.execute(
-      `SELECT v.vn, q.status 
+      `SELECT v.vn, q.status, q.queue_number, p.phone_number, p.first_name, p.last_name
        FROM queue q 
        JOIN visit v ON q.visit_id = v.visit_id 
+       JOIN patient p ON v.patient_id = p.patient_id
        WHERE q.queue_id = ?`,
       [queueId]
     );
@@ -263,7 +265,7 @@ router.post("/queue/:queueId/skip", async (req: Request, res: Response) => {
       return;
     }
 
-    const { vn, status: oldStatus } = rows[0];
+    const { vn, status: oldStatus, queue_number, phone_number, first_name, last_name } = rows[0];
 
     // Mark as skipped and increase priority
     await connection.execute(
@@ -279,12 +281,27 @@ router.post("/queue/:queueId/skip", async (req: Request, res: Response) => {
       [queueId, oldStatus, staffName]
     );
 
+    // Create notification with phone number
+    await connection.execute(
+      `INSERT INTO notification (queue_id, notification_type, message, is_sent, sent_at) 
+       VALUES (?, 'queue_skipped', ?, FALSE, NOW())`,
+      [queueId, `คิว ${queue_number} ถูกข้าม - กรุณาติดต่อเจ้าหน้าที่`]
+    );
+
     await connection.commit();
 
     const queueData = await buildQueueData(parseInt(queueId));
     broadcastQueueUpdate(vn, queueData);
 
-    res.json({ success: true, message: "Queue skipped" });
+    res.json({ 
+      success: true, 
+      message: "Queue skipped",
+      patientInfo: {
+        name: `${first_name} ${last_name}`,
+        phone: phone_number,
+        queueNumber: queue_number
+      }
+    });
   } catch (error) {
     await connection.rollback();
     console.error("Error in POST /api/staff/queue/:queueId/skip:", error);

@@ -6,6 +6,7 @@ DB
 1. docker compose up -d 
 2. npm run db:generate
 3. npm run db:push
+การนำตัวอย่างข้อมูลลงในดาต้าเบส -> npm run seed 
 (ถ้า database schema มีการเปลี่ยนแปลงให้ docker compose down -v แล้วเริ่มตั้งแต่ข้อ1.ใหม่)
 
 backend

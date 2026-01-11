@@ -51,6 +51,7 @@ export const queue = mysqlTable("queue", {
   issuedTime: datetime("issued_time"),
   calledTime: datetime("called_time"),
   completedTime: datetime("completed_time"),
+  skippedTime: datetime("skipped_time"),
 });
 
 // 5. Queue Status History

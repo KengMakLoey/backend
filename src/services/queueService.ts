@@ -92,11 +92,12 @@ export async function getDepartmentQueues(departmentId: number) {
         q.queue_number, 
         q.status, 
         q.issued_time, 
+        q.skipped_time,
         q.is_skipped, 
         q.priority_score,
         v.vn, 
         CONCAT(p.first_name, ' ', p.last_name) as patient_name,
-        p.phone_number  -- ⭐ ADD THIS LINE
+        p.phone_number
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
@@ -109,7 +110,7 @@ export async function getDepartmentQueues(departmentId: number) {
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,
-      phoneNumber: q.phone_number || 'ไม่มีข้อมูล',  // ⭐ ADD THIS LINE
+      phoneNumber: q.phone_number || 'ไม่มีข้อมูล',
       vn: q.vn,
       status: q.status,
       issuedTime: new Date(q.issued_time).toLocaleTimeString("th-TH", {
@@ -118,6 +119,7 @@ export async function getDepartmentQueues(departmentId: number) {
       }),
       isSkipped: Boolean(q.is_skipped),
       priorityScore: q.priority_score,
+      skippedTime: q.skipped_time || null,
     }));
   } finally {
     connection.release();

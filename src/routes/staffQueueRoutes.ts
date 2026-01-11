@@ -270,7 +270,7 @@ router.post("/queue/:queueId/skip", async (req: Request, res: Response) => {
     // Mark as skipped and increase priority
     await connection.execute(
       `UPDATE queue 
-       SET is_skipped = 1, status = 'waiting', priority_score = priority_score + 50 
+       SET is_skipped = 1, status = 'waiting', priority_score = priority_score + 50, skipped_time = NOW()
        WHERE queue_id = ?`,
       [queueId]
     );

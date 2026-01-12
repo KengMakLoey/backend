@@ -3,8 +3,11 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/database.js";
 import * as schema from "../../db/schema.js";
 import { buildQueueData } from "../services/queueService.js";
+import { getQueueByPhone } from "../services/queueService.js";
 
 const router = Router();
+
+router.get("/phone/:phone", getQueueByPhone);
 
 /**
  * GET /api/queue/:vn

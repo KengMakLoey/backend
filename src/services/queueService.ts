@@ -1,4 +1,19 @@
 import { pool } from "../config/database.js";
+import type { RequestHandler } from "express";
+
+function formatDepartmentLocation(
+  building?: string,
+  floor?: string,
+  room?: string
+): string {
+  const parts: string[] = [];
+
+  if (building) parts.push(building);
+  if (floor) parts.push(floor);
+  if (room) parts.push(`ห้อง ${room.replace(/^ห้อง\s*/i, "")}`);
+
+  return parts.join(" ");
+}
 
 /**
  * Build complete queue data by fetching fresh data from database
@@ -51,23 +66,24 @@ export async function buildQueueData(queueId: number) {
     );
 
     const yourPosition = posRows[0].position;
-    const estimatedTime =
+    /*const estimatedTime =
       yourPosition >= 0
         ? `${(yourPosition + 1) * 5}-${(yourPosition + 1) * 7} นาที`
-        : "กรุณาเข้ารับบริการ";
+        : "กรุณาเข้ารับบริการ";*/
 
     return {
       queueNumber: queueInfo.queue_number,
       vn: queueInfo.vn,
       patientName: queueInfo.patient_name,
       department: queueInfo.department_name,
-      departmentLocation: `${queueInfo.building} ${queueInfo.floor || ""} ${
-        queueInfo.room || ""
-      }`.trim(),
+      departmentLocation: formatDepartmentLocation(
+        queueInfo.building,
+        queueInfo.floor,
+        queueInfo.room
+      ),
       status: queueInfo.status,
       currentQueue: currentRows[0]?.queue_number || queueInfo.queue_number,
       yourPosition: Math.max(0, yourPosition),
-      estimatedTime,
       issuedTime: new Date(queueInfo.issued_time).toLocaleTimeString("th-TH", {
         hour: "2-digit",
         minute: "2-digit",
@@ -79,6 +95,57 @@ export async function buildQueueData(queueId: number) {
     connection.release();
   }
 }
+
+export const getQueueByPhone: RequestHandler = async (req, res) => {
+  const { phone } = req.params;
+
+  const connection = await pool.getConnection();
+  try {
+    const [patientRows]: any = await connection.execute(
+      `SELECT patient_id, first_name, last_name
+       FROM patient
+       WHERE phone_number = ?`,
+      [phone]
+    );
+
+    if (patientRows.length === 0) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    const patient = patientRows[0];
+
+    const [visitRows]: any = await connection.execute(
+      `SELECT visit_id
+       FROM visit
+       WHERE patient_id = ? AND visit_date = CURDATE()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [patient.patient_id]
+    );
+
+    if (visitRows.length === 0) {
+      return res.status(404).json({ error: "No visit found for today" });
+    }
+
+    const visitId = visitRows[0].visit_id;
+
+    const [queueRows]: any = await connection.execute(
+      `SELECT queue_id
+       FROM queue
+       WHERE visit_id = ?`,
+      [visitId]
+    );
+
+    if (queueRows.length === 0) {
+      return res.status(404).json({ error: "Queue not found" });
+    }
+
+    const queueData = await buildQueueData(queueRows[0].queue_id);
+    return res.json(queueData);
+  } finally {
+    connection.release();
+  }
+};
 
 /**
  * Get all queues for a specific department

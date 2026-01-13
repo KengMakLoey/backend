@@ -88,7 +88,7 @@ async function resetQueue() {
     console.log(
       `\n🎉 Queue Reset Completed! Total Queues: ${queueCount[0].count}`
     );
-    console.log("พร้อมสำหรับการทดสอบรันคิวใหม่แล้วครับ");
+    console.log("The queues has been reset!");
   } catch (error) {
     console.error("❌ Reset Queue failed:", error);
     process.exit(1);

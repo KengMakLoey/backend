@@ -1,3 +1,5 @@
+// เพิ่ม RowDataPacket เข้าไปใน import
+import { RowDataPacket } from "mysql2";
 import "dotenv/config";
 import { pool } from "../src/config/database.js";
 
@@ -9,7 +11,7 @@ import { pool } from "../src/config/database.js";
 
 async function seed() {
   const connection = await pool.getConnection();
-  
+
   try {
     console.log("🌱 Starting database seed...");
 
@@ -55,8 +57,9 @@ async function seed() {
     `);
     console.log("✅ Staff accounts created");
 
-    // ==================== PATIENTS (HN 7 หลัก) ====================
+    // ==================== PATIENTS ====================
     console.log("🏥 Creating patients...");
+    // เพิ่ม HN21-HN30 เพื่อใช้สำหรับถมคิวให้เยอะๆ
     await connection.execute(`
       INSERT INTO patient (hn, first_name, last_name, phone_number) VALUES
       ('HN0000001', 'สมชาย', 'ใจดี', '0812345678'),
@@ -78,21 +81,29 @@ async function seed() {
       ('HN0000017', 'ทดสอบ', 'สร้างคิว7', '0877777777'),
       ('HN0000018', 'ทดสอบ', 'สร้างคิว8', '0888888888'),
       ('HN0000019', 'ทดสอบ', 'สร้างคิว9', '0899999999'),
-      ('HN0000020', 'ทดสอบ', 'สร้างคิว10', '0800000000')
+      ('HN0000020', 'ทดสอบ', 'สร้างคิว10', '0800000000'),
+      ('HN0000021', 'คนไข้', 'เยอะ1', '0800000021'),
+      ('HN0000022', 'คนไข้', 'เยอะ2', '0800000022'),
+      ('HN0000023', 'คนไข้', 'เยอะ3', '0800000023'),
+      ('HN0000024', 'คนไข้', 'เยอะ4', '0800000024'),
+      ('HN0000025', 'คนไข้', 'เยอะ5', '0800000025'),
+      ('HN0000026', 'คนไข้', 'เยอะ6', '0800000026'),
+      ('HN0000027', 'คนไข้', 'เยอะ7', '0800000027'),
+      ('HN0000028', 'คนไข้', 'เยอะ8', '0800000028'),
+      ('HN0000029', 'คนไข้', 'เยอะ9', '0800000029'),
+      ('HN0000030', 'คนไข้', 'เยอะ10', '0800000030')
     `);
     console.log("✅ Patients created");
 
-    // ==================== VISITS (VN260108-XXXX) ====================
+    // ==================== VISITS ====================
     console.log("📅 Creating visits...");
     const today = new Date();
-    const yy = String(today.getFullYear()).slice(-2);  // 26
-    const mm = String(today.getMonth() + 1).padStart(2, '0');  // 01
-    const dd = String(today.getDate()).padStart(2, '0');  // 08
-    const dateStr = today.toISOString().split('T')[0];
-    
-    // VN format: VN260108-0001
-    // VN 1-10: มีคิวแล้ว
-    // VN 11-20: ยังไม่มีคิว (สำหรับทดสอบสร้างคิว)
+    const yy = String(today.getFullYear()).slice(-2);
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const dateStr = today.toISOString().split("T")[0];
+
+    // เพิ่ม VN21-30
     await connection.execute(`
       INSERT INTO visit (vn, patient_id, visit_date, visit_type) VALUES
       ('VN${yy}${mm}${dd}-0001', 1, '${dateStr}', 'OPD'),
@@ -114,19 +125,39 @@ async function seed() {
       ('VN${yy}${mm}${dd}-0017', 17, '${dateStr}', 'OPD'),
       ('VN${yy}${mm}${dd}-0018', 18, '${dateStr}', 'OPD'),
       ('VN${yy}${mm}${dd}-0019', 19, '${dateStr}', 'OPD'),
-      ('VN${yy}${mm}${dd}-0020', 20, '${dateStr}', 'OPD')
+      ('VN${yy}${mm}${dd}-0020', 20, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0021', 21, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0022', 22, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0023', 23, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0024', 24, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0025', 25, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0026', 26, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0027', 27, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0028', 28, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0029', 29, '${dateStr}', 'OPD'),
+      ('VN${yy}${mm}${dd}-0030', 30, '${dateStr}', 'OPD')
     `);
     console.log("✅ Visits created");
 
     // ==================== QUEUES ====================
     console.log("🎫 Creating queues...");
-    
-    // อายุรกรรม - 3 คิว
+
+    // อายุรกรรม (MED) - เดิม 3 คิว + เพิ่ม 10 คิว (VN 21-30) = รวม 13 คิว
     await connection.execute(`
       INSERT INTO queue (queue_number, visit_id, department_id, queue_token, status, issued_time, priority_score, is_skipped) VALUES
-      ('MED001', 1, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 30 MINUTE), 0, 0),
-      ('MED002', 2, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 25 MINUTE), 0, 0),
-      ('MED003', 8, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 20 MINUTE), 0, 0)
+      ('MED001', 1, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 60 MINUTE), 0, 0),
+      ('MED002', 2, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 55 MINUTE), 0, 0),
+      ('MED003', 8, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 50 MINUTE), 0, 0),
+      ('MED004', 21, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 45 MINUTE), 0, 0),
+      ('MED005', 22, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 40 MINUTE), 0, 0),
+      ('MED006', 23, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 35 MINUTE), 0, 0),
+      ('MED007', 24, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 30 MINUTE), 0, 0),
+      ('MED008', 25, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 25 MINUTE), 0, 0),
+      ('MED009', 26, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 20 MINUTE), 0, 0),
+      ('MED010', 27, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 15 MINUTE), 0, 0),
+      ('MED011', 28, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 10 MINUTE), 0, 0),
+      ('MED012', 29, 1, UUID(), 'waiting', DATE_SUB(NOW(), INTERVAL 5 MINUTE), 0, 0),
+      ('MED013', 30, 1, UUID(), 'waiting', NOW(), 0, 0)
     `);
 
     // ศัลยกรรม - 2 คิว (1 ข้าม)
@@ -173,14 +204,26 @@ async function seed() {
     console.log("✅ Queue status history created");
 
     // ==================== SUMMARY ====================
-    const [deptCount]: any = await connection.execute("SELECT COUNT(*) as count FROM department");
-    const [staffCount]: any = await connection.execute("SELECT COUNT(*) as count FROM staff");
-    const [patientCount]: any = await connection.execute("SELECT COUNT(*) as count FROM patient");
-    const [visitCount]: any = await connection.execute("SELECT COUNT(*) as count FROM visit");
-    const [queueCount]: any = await connection.execute("SELECT COUNT(*) as count FROM queue");
+    // ใช้ <RowDataPacket[]> เพื่อบอก TypeScript ว่าผลลัพธ์คือ Array
+    const [deptCount] = await connection.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) as count FROM department"
+    );
+    const [staffCount] = await connection.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) as count FROM staff"
+    );
+    const [patientCount] = await connection.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) as count FROM patient"
+    );
+    const [visitCount] = await connection.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) as count FROM visit"
+    );
+    const [queueCount] = await connection.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) as count FROM queue"
+    );
 
     console.log("\n✅ Seed completed successfully!\n");
     console.log("📊 Summary:");
+    // ตอนนี้ TypeScript จะยอมให้ใช้ [0] แล้ว
     console.log(`   - Departments: ${deptCount[0].count}`);
     console.log(`   - Staff: ${staffCount[0].count}`);
     console.log(`   - Patients: ${patientCount[0].count}`);
@@ -188,21 +231,13 @@ async function seed() {
     console.log(`   - Queues: ${queueCount[0].count}`);
     console.log("\n🔑 Test Accounts:");
     console.log("   Staff Login:");
-    console.log("   - Username: staff / Password: staff123 (อายุรกรรม)");
+    console.log(
+      "   - Username: staff / Password: staff123 (อายุรกรรม - คนเยอะ 13 คิว)"
+    );
     console.log("   - Username: doctor2 / Password: doctor123 (ศัลยกรรม)");
-    console.log("   - Username: doctor3 / Password: doctor123 (กุมารเวชกรรม)");
-    console.log(`\n📋 Test VN Numbers (Format: VN${yy}${mm}${dd}-XXXX):`);
-    console.log(`\n   ✅ VN ที่มีคิวแล้ว (1-10):`);
-    console.log(`   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม)`);
-    console.log(`   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม)`);
-    console.log(`   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรม - ข้ามคิว)`);
-    console.log(`\n   🆕 VN สำหรับทดสอบสร้างคิว (11-20):`);
-    console.log(`   - VN${yy}${mm}${dd}-0011 (HN0000011 - ทดสอบ สร้างคิว1)`);
-    console.log(`   - VN${yy}${mm}${dd}-0012 (HN0000012 - ทดสอบ สร้างคิว2)`);
-    console.log(`   - VN${yy}${mm}${dd}-0013 (HN0000013 - ทดสอบ สร้างคิว3)`);
-    console.log(`   ... ถึง VN${yy}${mm}${dd}-0020`);
-    console.log(`\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "11", "12" หรือ "VN11", "VN12"`);
-    
+    console.log(`\n📋 Test VN Numbers:`);
+    console.log(`   🔥 อายุรกรรม (MED): คิวแน่น (VN 1,2,8 และ 21-30)`);
+    console.log(`   🆕 VN ว่างสำหรับทดสอบ (11-20)`);
   } catch (error) {
     console.error("❌ Seed failed:", error);
     throw error;

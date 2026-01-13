@@ -30,7 +30,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "seed": "tsx ./db/seed.ts"
+    "seed": "tsx ./db/seed.ts",
+    "q:reset": "tsx ./db/reset-queue.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

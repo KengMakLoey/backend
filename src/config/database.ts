@@ -13,6 +13,12 @@ export const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   timezone: '+07:00',
+  dateStrings: false
+});
+
+// ตั้งค่า timezone ทุกครั้งที่ได้ connection ใหม่
+pool.on('connection', (connection) => {
+  connection.query("SET time_zone = '+07:00'");
 });
 
 // Drizzle ORM instance
@@ -25,6 +31,7 @@ export async function testConnection() {
     await connection.ping();
     connection.release();
     console.log("✅ Database connected successfully");
+    console.log("✅ Timezone set to +07:00 (on each connection)");
     return true;
   } catch (error) {
     console.error("❌ Database connection failed:", error);

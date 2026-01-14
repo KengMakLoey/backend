@@ -109,7 +109,8 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (patientRows.length === 0) {
-      return res.status(404).json({ error: "Phone number not found" });
+      res.status(404).json({ error: "Phone number not found" });
+      return;
     }
 
     const patient = patientRows[0];
@@ -124,7 +125,8 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (visitRows.length === 0) {
-      return res.status(404).json({ error: "No visit found for today" });
+      res.status(404).json({ error: "No visit found for today" });
+      return;
     }
 
     const visitId = visitRows[0].visit_id;
@@ -137,11 +139,12 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (queueRows.length === 0) {
-      return res.status(404).json({ error: "Queue not found" });
+      res.status(404).json({ error: "Queue not found" });
+      return;
     }
 
     const queueData = await buildQueueData(queueRows[0].queue_id);
-    return res.json(queueData);
+    res.json(queueData);
   } finally {
     connection.release();
   }

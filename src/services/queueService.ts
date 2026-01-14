@@ -156,12 +156,19 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
   try {
+    // เช็ค timezone ก่อน
+    const [tzCheck]: any = await connection.execute(
+      `SELECT NOW() as now, CURDATE() as today, @@session.time_zone as tz`
+    );
+    
     const [queues]: any = await connection.execute(
       `SELECT 
         q.queue_id, 
         q.queue_number, 
         q.status, 
-        q.issued_time, 
+        q.issued_time,
+        DATE(q.issued_time) as issued_date,
+        CURDATE() as current_date_value,
         q.skipped_time,
         q.is_skipped, 
         q.priority_score,
@@ -171,12 +178,19 @@ export async function getDepartmentQueues(departmentId: number) {
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
-       WHERE q.department_id = ? AND DATE(q.issued_time) = CURDATE()
+       WHERE q.department_id = ?
        ORDER BY q.priority_score DESC, q.issued_time ASC`,
       [departmentId]
     );
 
-    return queues.map((q: any) => ({
+    // กรองด้วย JavaScript แทน
+    const todayQueues = queues.filter((q: any) => {
+      const issuedDate = new Date(q.issued_time).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      return issuedDate === today;
+    });
+
+    return todayQueues.map((q: any) => ({
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,

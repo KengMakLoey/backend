@@ -47,19 +47,19 @@ async function seed() {
     // ==================== STAFF ====================
     console.log("👥 Creating staff accounts...");
     await connection.execute(`
-      INSERT INTO staff (staff_name, username, password, role, department_id) VALUES
-      ('คลินิกศัลยกรรมทางเดินปัสสาวะ', 'urology', 'urology123', 'doctor', 1),
-      ('คลินิกกุมาร', 'pediatrics', 'pediatrics123', 'doctor', 2),
-      ('คลินิกสูติ-นรีเวช', 'obgyn', 'obgyn123', 'doctor', 3),
-      ('คลินิกโรคเรื้อรัง', 'ncd', 'ncd123', 'doctor', 4),
-      ('คลินิกพิเศษอายุรกรรม', 'specmed', 'specmed123', 'doctor', 5),
-      ('ไตเทียม', 'dialysis', 'dialysis123', 'doctor', 6),
-      ('คลินิกอายุรกรรม', 'medicine', 'medicine123', 'doctor', 7),
-      ('คลินิกตา', 'eye', 'eye123', 'doctor', 8),
-      ('คลินิกทันตกรรม', 'dentistry', 'dentistry123', 'doctor', 9),
-      ('คลินิกหู คอ จมูก', 'ent', 'ent123', 'doctor', 10),
-      ('ห้องตรวจสุขภาพพิเศษ', 'checkup', 'checkup123', 'doctor', 11)
-    `);
+    INSERT INTO staff (staff_name, username, password, role, department_id) VALUES
+    ('คลินิกศัลยกรรมทางเดินปัสสาวะ', 'uro', 'uro123', 'doctor', 1),
+    ('คลินิกกุมาร', 'ped', 'ped123', 'doctor', 2),
+    ('คลินิกสูติ-นรีเวช', 'obg', 'obg123', 'doctor', 3),
+    ('คลินิกโรคเรื้อรัง', 'ncd', 'ncd123', 'doctor', 4),
+    ('คลินิกพิเศษอายุรกรรม', 'spm', 'spm123', 'doctor', 5),
+    ('ไตเทียม', 'dia', 'dia123', 'doctor', 6),
+    ('คลินิกอายุรกรรม', 'med', 'med123', 'doctor', 7),
+    ('คลินิกตา', 'eye', 'eye123', 'doctor', 8),
+    ('คลินิกทันตกรรม', 'den', 'den123', 'doctor', 9),
+    ('คลินิกหู คอ จมูก', 'ent', 'ent123', 'doctor', 10),
+    ('ห้องตรวจสุขภาพพิเศษ', 'spc', 'spc123', 'doctor', 11)
+  `);
     console.log("✅ Staff accounts created");
 
     // ==================== PATIENTS (HN 7 หลัก) ====================
@@ -219,18 +219,18 @@ async function seed() {
     
     console.log("\n🔑 Test Accounts:");
     console.log("   Staff Login:");
-    console.log("   - Username: urology / Password: urology123 (คลินิกศัลยกรรมทางเดินปัสสาวะ)");
-    console.log("   - Username: pediatrics / Password: pediatrics123 (คลินิกกุมาร)");
-    console.log("   - Username: obgyn / Password: obgyn123 (คลินิกสูติ-นรีเวช)");
+    console.log("   - Username: uro / Password: uro123 (คลินิกศัลยกรรมทางเดินปัสสาวะ)");
+    console.log("   - Username: ped / Password: ped123 (คลินิกกุมาร)");
+    console.log("   - Username: obg / Password: obg123 (คลินิกสูติ-นรีเวช)");
     console.log("   - Username: ncd / Password: ncd123 (คลินิกโรคเรื้อรัง)");
-    console.log("   - Username: specmed / Password: specmed123 (คลินิกพิเศษอายุรกรรม)");
-    console.log("   - Username: dialysis / Password: dialysis123 (ไตเทียม)");
-    console.log("   - Username: medicine / Password: medicine123 (คลินิกอายุรกรรม)");
+    console.log("   - Username: spm / Password: spm123 (คลินิกพิเศษอายุรกรรม)");
+    console.log("   - Username: dia / Password: dia123 (ไตเทียม)");
+    console.log("   - Username: med / Password: med123 (คลินิกอายุรกรรม)");
     console.log("   - Username: eye / Password: eye123 (คลินิกตา)");
-    console.log("   - Username: dentistry / Password: dentistry123 (คลินิกทันตกรรม)");
+    console.log("   - Username: den / Password: den123 (คลินิกทันตกรรม)");
     console.log("   - Username: ent / Password: ent123 (คลินิกหู คอ จมูก)");
-    console.log("   - Username: checkup / Password: checkup123 (ห้องตรวจสุขภาพพิเศษ)");
-    
+    console.log("   - Username: spc / Password: spc123 (ห้องตรวจสุขภาพพิเศษ)");
+
     console.log(`\n📋 Test VN Numbers (Format: VN${yy}${mm}${dd}-XXXX):`);
     console.log(`\n   ✅ VN ที่มีคิวแล้ว:`);
     console.log(`   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม/MED001)`);

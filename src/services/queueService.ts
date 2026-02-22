@@ -203,7 +203,7 @@ export async function getDepartmentQueues(departmentId: number) {
       }),
       isSkipped: Boolean(q.is_skipped),
       priorityScore: q.priority_score,
-      skippedTime: q.skipped_time || null,
+      skippedTime: q.skipped_time_formatted || null,
     }));
   } finally {
     connection.release();

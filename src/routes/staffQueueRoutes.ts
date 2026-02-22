@@ -148,7 +148,7 @@ router.post("/queue/:queueId/call", async (req: Request, res: Response) => {
 
     // Update queue status
     await connection.execute(
-      `UPDATE queue SET status = 'called', called_time = NOW() 
+      `UPDATE queue SET status = 'called', called_time = NOW(), is_skipped = 0
        WHERE queue_id = ?`,
       [queueId]
     );

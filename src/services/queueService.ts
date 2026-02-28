@@ -1,7 +1,7 @@
 import { pool } from "../config/database.js";
 import type { RequestHandler } from "express";
 
-function formatDepartmentLocation(
+export function formatDepartmentLocation(
   building?: string,
   floor?: string,
   room?: string

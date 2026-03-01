@@ -47,6 +47,9 @@ app.get("/api/health", (req: Request, res: Response) => {
   });
 });
 
+// Static files (e.g., images)
+app.use("/images", express.static("public"));
+
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: "Route not found" });

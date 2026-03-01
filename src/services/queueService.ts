@@ -29,7 +29,7 @@ export async function buildQueueData(queueId: number) {
         q.is_skipped, q.priority_score, q.department_id, 
         v.vn,
         CONCAT(p.first_name, ' ', p.last_name) as patient_name,
-        d.department_name, d.building, d.floor, d.room
+        d.department_name, d.department_code, d.building, d.floor, d.room, d.room_image
       FROM queue q
       JOIN visit v ON q.visit_id = v.visit_id
       JOIN patient p ON v.patient_id = p.patient_id
@@ -76,6 +76,8 @@ export async function buildQueueData(queueId: number) {
       vn: queueInfo.vn,
       patientName: queueInfo.patient_name,
       department: queueInfo.department_name,
+      departmentCode: queueInfo.department_code,
+      roomImage: queueInfo.room_image ?? null,
       departmentLocation: formatDepartmentLocation(
         queueInfo.building,
         queueInfo.floor,

@@ -26,6 +26,8 @@ export const department = mysqlTable("department", {
   building: varchar("building", { length: 255 }),
   floor: varchar("floor", { length: 255 }),
   room: varchar("room", { length: 255 }),
+  roomImage: varchar("room_image", { length: 500 }), 
+  directions: varchar("directions", { length: 1000 })
 });
 
 // 3. Visit

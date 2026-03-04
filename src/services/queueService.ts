@@ -10,7 +10,7 @@ function formatDepartmentLocation(
 
   if (building) parts.push(building);
   if (floor) parts.push(floor);
-  if (room) parts.push(`ห้อง ${room.replace(/^ห้อง\s*/i, "")}`);
+  if (room) parts.push(room);
 
   return parts.join(" ");
 }
@@ -112,7 +112,8 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (patientRows.length === 0) {
-      return res.status(404).json({ error: "Phone number not found" });
+      res.status(404).json({ error: "Phone number not found" });
+      return; // สั่ง return เปล่าๆ เพื่อหยุดการทำงาน (ได้ type เป็น void)
     }
 
     const patient = patientRows[0];
@@ -127,7 +128,8 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (visitRows.length === 0) {
-      return res.status(404).json({ error: "No visit found for today" });
+      res.status(404).json({ error: "No visit found for today" });
+      return; // สั่ง return เปล่าๆ
     }
 
     const visitId = visitRows[0].visit_id;
@@ -140,11 +142,16 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
     );
 
     if (queueRows.length === 0) {
-      return res.status(404).json({ error: "Queue not found" });
+      res.status(404).json({ error: "Queue not found" });
+      return; // สั่ง return เปล่าๆ
     }
 
     const queueData = await buildQueueData(queueRows[0].queue_id);
-    return res.json(queueData);
+
+    // บรรทัดสุดท้ายให้เรียก res.json เฉยๆ ห้ามมีคำว่า return นำหน้า
+    res.json(queueData);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
   } finally {
     connection.release();
   }

@@ -9,7 +9,7 @@ import { pool } from "../src/config/database.js";
 
 async function seed() {
   const connection = await pool.getConnection();
-  
+
   try {
     console.log("🌱 Starting database seed...");
 
@@ -30,17 +30,17 @@ async function seed() {
     console.log("📋 Creating departments...");
     await connection.execute(`
       INSERT INTO department (department_name, department_code, building, floor, room) VALUES
-      ('คลินิกศัลยกรรมทางเดินปัสสาวะ', 'URO', 'อาคาร 3', 'ชั้น 1', NULL),
-      ('คลินิกกุมาร', 'PED', 'อาคาร 3', 'ชั้น 2', NULL),
-      ('คลินิกสูติ-นรีเวช', 'OBG', 'อาคาร 3', 'ชั้น 2', 'ห้อง G210'),
-      ('คลินิกโรคเรื้อรัง', 'NCD', 'อาคาร 3', 'ชั้น 3', 'ห้อง M370'),
-      ('คลินิกพิเศษอายุรกรรม', 'SPM', 'อาคาร 3', 'ชั้น 3', 'ห้อง M360'),
-      ('ไตเทียม', 'DIA', 'อาคาร 3', 'ชั้น 3', NULL),
-      ('คลินิกอายุรกรรม', 'MED', 'อาคาร 3', 'ชั้น 3', 'ห้อง M380'),
-      ('คลินิกตา', 'EYE', 'อาคาร 3', 'ชั้น 4', 'ห้อง E400'),
-      ('คลินิกทันตกรรม', 'DEN', 'อาคาร 3', 'ชั้น 4', NULL),
-      ('คลินิกหู คอ จมูก', 'ENT', 'อาคาร 3', 'ชั้น 4', 'ห้อง N450'),
-      ('ห้องตรวจสุขภาพพิเศษ', 'SPC', 'อาคาร 3', 'ชั้น 4', NULL);
+      ('คลินิกศัลยกรรมทางเดินปัสสาวะ', 'URO', '3', '1', NULL),
+      ('คลินิกกุมาร', 'PED', '3', '2', NULL),
+      ('คลินิกสูติ-นรีเวช', 'OBG', '3', '2', 'G210'),
+      ('คลินิกโรคเรื้อรัง', 'NCD', '3', '3', 'M370'),
+      ('คลินิกพิเศษอายุรกรรม', 'SPM', '3', '3', 'M360'),
+      ('ไตเทียม', 'DIA', '3', '3', NULL),
+      ('คลินิกอายุรกรรม', 'MED', '3', '3', 'M380'),
+      ('คลินิกตา', 'EYE', '3', '4', 'E400'),
+      ('คลินิกทันตกรรม', 'DEN', '3', '4', NULL),
+      ('คลินิกหู คอ จมูก', 'ENT', '3', '4', 'N450'),
+      ('ห้องตรวจสุขภาพพิเศษ', 'SPC', '3', '4', NULL);
     `);
     console.log("✅ Departments created");
 
@@ -90,11 +90,11 @@ async function seed() {
     // ==================== VISITS (VN260108-XXXX) ====================
     console.log("📅 Creating visits...");
     const today = new Date();
-    const yy = String(today.getFullYear()).slice(-2);  // 26
-    const mm = String(today.getMonth() + 1).padStart(2, '0');  // 01
-    const dd = String(today.getDate()).padStart(2, '0');  // 08
-    const dateStr = today.toISOString().split('T')[0];
-    
+    const yy = String(today.getFullYear()).slice(-2); // 26
+    const mm = String(today.getMonth() + 1).padStart(2, "0"); // 01
+    const dd = String(today.getDate()).padStart(2, "0"); // 08
+    const dateStr = today.toISOString().split("T")[0];
+
     // VN format: VN260108-0001
     // VN 1-10: มีคิวแล้ว
     // VN 11-20: ยังไม่มีคิว (สำหรับทดสอบสร้างคิว)
@@ -125,7 +125,7 @@ async function seed() {
 
     // ==================== QUEUES ====================
     console.log("🎫 Creating queues...");
-    
+
     // อายุรกรรม - 3 คิว
     await connection.execute(`
       INSERT INTO queue (queue_number, visit_id, department_id, queue_token, status, issued_time, priority_score, is_skipped) VALUES
@@ -178,11 +178,21 @@ async function seed() {
     console.log("✅ Queue status history created");
 
     // ==================== SUMMARY ====================
-    const [deptCount]: any = await connection.execute("SELECT COUNT(*) as count FROM department");
-    const [staffCount]: any = await connection.execute("SELECT COUNT(*) as count FROM staff");
-    const [patientCount]: any = await connection.execute("SELECT COUNT(*) as count FROM patient");
-    const [visitCount]: any = await connection.execute("SELECT COUNT(*) as count FROM visit");
-    const [queueCount]: any = await connection.execute("SELECT COUNT(*) as count FROM queue");
+    const [deptCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM department",
+    );
+    const [staffCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM staff",
+    );
+    const [patientCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM patient",
+    );
+    const [visitCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM visit",
+    );
+    const [queueCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM queue",
+    );
 
     console.log("\n✅ Seed completed successfully!\n");
     console.log("📊 Summary:");
@@ -198,16 +208,23 @@ async function seed() {
     console.log("   - Username: doctor3 / Password: doctor123 (กุมารเวชกรรม)");
     console.log(`\n📋 Test VN Numbers (Format: VN${yy}${mm}${dd}-XXXX):`);
     console.log(`\n   ✅ VN ที่มีคิวแล้ว (1-10):`);
-    console.log(`   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม)`);
-    console.log(`   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม)`);
-    console.log(`   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรม - ข้ามคิว)`);
+    console.log(
+      `   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม)`,
+    );
+    console.log(
+      `   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม)`,
+    );
+    console.log(
+      `   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรม - ข้ามคิว)`,
+    );
     console.log(`\n   🆕 VN สำหรับทดสอบสร้างคิว (11-20):`);
     console.log(`   - VN${yy}${mm}${dd}-0011 (HN0000011 - ทดสอบ สร้างคิว1)`);
     console.log(`   - VN${yy}${mm}${dd}-0012 (HN0000012 - ทดสอบ สร้างคิว2)`);
     console.log(`   - VN${yy}${mm}${dd}-0013 (HN0000013 - ทดสอบ สร้างคิว3)`);
     console.log(`   ... ถึง VN${yy}${mm}${dd}-0020`);
-    console.log(`\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "11", "12" หรือ "VN11", "VN12"`);
-    
+    console.log(
+      `\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "11", "12" หรือ "VN11", "VN12"`,
+    );
   } catch (error) {
     console.error("❌ Seed failed:", error);
     throw error;

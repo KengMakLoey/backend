@@ -29,7 +29,7 @@ export async function buildQueueData(queueId: number) {
         q.is_skipped, q.priority_score, q.department_id, 
         v.vn,
         CONCAT(p.first_name, ' ', p.last_name) as patient_name,
-        d.department_name, d.building, d.floor, d.room
+        d.department_name, d.department_code, d.building, d.floor, d.room, d.room_image
       FROM queue q
       JOIN visit v ON q.visit_id = v.visit_id
       JOIN patient p ON v.patient_id = p.patient_id
@@ -76,6 +76,8 @@ export async function buildQueueData(queueId: number) {
       vn: queueInfo.vn,
       patientName: queueInfo.patient_name,
       department: queueInfo.department_name,
+      departmentCode: queueInfo.department_code,
+      roomImage: queueInfo.room_image ?? null,
       departmentLocation: formatDepartmentLocation(
         queueInfo.building,
         queueInfo.floor,
@@ -113,7 +115,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
     if (patientRows.length === 0) {
       res.status(404).json({ error: "Phone number not found" });
-      return; // สั่ง return เปล่าๆ เพื่อหยุดการทำงาน (ได้ type เป็น void)
+      return;
     }
 
     const patient = patientRows[0];
@@ -129,7 +131,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
     if (visitRows.length === 0) {
       res.status(404).json({ error: "No visit found for today" });
-      return; // สั่ง return เปล่าๆ
+      return;
     }
 
     const visitId = visitRows[0].visit_id;
@@ -143,15 +145,11 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
     if (queueRows.length === 0) {
       res.status(404).json({ error: "Queue not found" });
-      return; // สั่ง return เปล่าๆ
+      return;
     }
 
     const queueData = await buildQueueData(queueRows[0].queue_id);
-
-    // บรรทัดสุดท้ายให้เรียก res.json เฉยๆ ห้ามมีคำว่า return นำหน้า
     res.json(queueData);
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
   } finally {
     connection.release();
   }
@@ -163,12 +161,19 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
   try {
+    // เช็ค timezone ก่อน
+    const [tzCheck]: any = await connection.execute(
+      `SELECT NOW() as now, CURDATE() as today, @@session.time_zone as tz`
+    );
+    
     const [queues]: any = await connection.execute(
       `SELECT 
         q.queue_id, 
         q.queue_number, 
         q.status, 
-        q.issued_time, 
+        q.issued_time,
+        DATE(q.issued_time) as issued_date,
+        CURDATE() as current_date_value,
         q.skipped_time,
         q.is_skipped, 
         q.priority_score,
@@ -178,12 +183,19 @@ export async function getDepartmentQueues(departmentId: number) {
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
-       WHERE q.department_id = ? AND DATE(q.issued_time) = CURDATE()
+       WHERE q.department_id = ?
        ORDER BY q.priority_score DESC, q.issued_time ASC`,
       [departmentId],
     );
 
-    return queues.map((q: any) => ({
+    // กรองด้วย JavaScript แทน
+    const todayQueues = queues.filter((q: any) => {
+      const issuedDate = new Date(q.issued_time).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      return issuedDate === today;
+    });
+
+    return todayQueues.map((q: any) => ({
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,
@@ -196,7 +208,7 @@ export async function getDepartmentQueues(departmentId: number) {
       }),
       isSkipped: Boolean(q.is_skipped),
       priorityScore: q.priority_score,
-      skippedTime: q.skipped_time || null,
+      skippedTime: q.skipped_time_formatted || null,
     }));
   } finally {
     connection.release();

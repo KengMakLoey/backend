@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "8a04e4f9-e030-4ed2-8e7e-71c69aa0d38d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "a0872520-c1d9-4fad-bd54-6e3451787e49",
+  "prevId": "8a04e4f9-e030-4ed2-8e7e-71c69aa0d38d",
   "tables": {
     "department": {
       "name": "department",
@@ -45,6 +45,20 @@
         "room": {
           "name": "room",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "room_image": {
+          "name": "room_image",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "directions": {
+          "name": "directions",
+          "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

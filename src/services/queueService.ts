@@ -1,65 +1,10 @@
 import { pool } from "../config/database.js";
 import type { RequestHandler } from "express";
-import { RowDataPacket } from "mysql2";
-
-// Interfaces for database rows
-interface QueueRow extends RowDataPacket {
-  queue_id: number;
-  queue_number: string;
-  status: 'waiting' | 'called' | 'in_progress' | 'completed' | 'skipped';
-  issued_time: Date;
-  is_skipped: boolean;
-  priority_score: number;
-  department_id: number;
-  vn: string;
-  patient_name: string;
-  department_name: string;
-  department_code: string;
-  building: string | null;
-  floor: string | null;
-  room: string | null;
-  called_time?: Date;
-}
-
-interface PositionRow extends RowDataPacket {
-  position: number;
-}
-
-interface CurrentQueueRow extends RowDataPacket {
-  queue_number: string;
-}
-
-interface PatientRow extends RowDataPacket {
-  patient_id: number;
-  first_name: string;
-  last_name: string;
-}
-
-interface VisitRow extends RowDataPacket {
-  visit_id: number;
-}
-
-interface QueueIdRow extends RowDataPacket {
-  queue_id: number;
-}
-
-interface DepartmentQueueRow extends RowDataPacket {
-  queue_id: number;
-  queue_number: string;
-  status: string;
-  issued_time: Date;
-  skipped_time: Date | null;
-  is_skipped: boolean;
-  priority_score: number;
-  vn: string;
-  patient_name: string;
-  phone_number: string | null;
-}
 
 function formatDepartmentLocation(
-  building?: string | null,
-  floor?: string | null,
-  room?: string | null
+  building?: string,
+  floor?: string,
+  room?: string
 ): string {
   const parts: string[] = [];
 
@@ -78,7 +23,7 @@ export async function buildQueueData(queueId: number) {
   const connection = await pool.getConnection();
   try {
     // 1. Get queue info with department details
-    const [rows] = await connection.execute<QueueRow[]>(
+    const [rows]: any = await connection.execute(
       `SELECT 
         q.queue_id, q.queue_number, q.status, q.issued_time, 
         q.is_skipped, q.priority_score, q.department_id, 
@@ -106,7 +51,7 @@ export async function buildQueueData(queueId: number) {
     const queueInfo = rows[0];
 
     // 2. Get current queue being called in this department
-    const [currentRows] = await connection.execute<CurrentQueueRow[]>(
+    const [currentRows]: any = await connection.execute(
       `SELECT queue_number FROM queue
        WHERE department_id = ? AND status = 'called'
        ORDER BY called_time DESC LIMIT 1`,
@@ -114,7 +59,7 @@ export async function buildQueueData(queueId: number) {
     );
 
     // 3. Calculate position in queue
-    const [posRows] = await connection.execute<PositionRow[]>(
+    const [posRows]: any = await connection.execute(
       `SELECT COUNT(*) as position FROM queue
        WHERE department_id = ? AND status = 'waiting' AND is_skipped = FALSE
        AND (priority_score > ? OR (priority_score = ? AND issued_time < ?))`,
@@ -126,29 +71,37 @@ export async function buildQueueData(queueId: number) {
       ]
     );
 
-    const yourPosition = posRows[0]?.position ?? 0;
+    const yourPosition = posRows[0].position;
+    /*const estimatedTime =
+      yourPosition >= 0
+        ? `${(yourPosition + 1) * 5}-${(yourPosition + 1) * 7} นาที`
+        : "กรุณาเข้ารับบริการ";*/
 
-    return {
-      queueNumber: queueInfo.queue_number,
-      vn: queueInfo.vn,
-      patientName: queueInfo.patient_name,
-      department: queueInfo.department_name,
-      departmentCode: queueInfo.department_code,
-      departmentLocation: formatDepartmentLocation(
-        queueInfo.building,
-        queueInfo.floor,
-        queueInfo.room
-      ),
-      status: queueInfo.status,
-      currentQueue: currentRows[0]?.queue_number || queueInfo.queue_number,
-      yourPosition: Math.max(0, yourPosition),
-      issuedTime: new Date(queueInfo.issued_time).toLocaleTimeString("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      priorityScore: queueInfo.priority_score,
-      isSkipped: Boolean(queueInfo.is_skipped),
-    };
+
+  return {
+  queueNumber: queueInfo.queue_number,
+  vn: queueInfo.vn,
+  patientName: queueInfo.patient_name,
+
+  department: queueInfo.department_name,
+  departmentCode: queueInfo.department_code,  // เพิ่มมาเพื่อแสดงรหัสแผนก
+
+  departmentLocation: formatDepartmentLocation(
+    queueInfo.building,
+    queueInfo.floor,
+    queueInfo.room
+  ),
+
+  status: queueInfo.status,
+  currentQueue: currentRows[0]?.queue_number || queueInfo.queue_number,
+  yourPosition: Math.max(0, yourPosition),
+  issuedTime: new Date(queueInfo.issued_time).toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+  priorityScore: queueInfo.priority_score,
+  isSkipped: Boolean(queueInfo.is_skipped),
+  };
   } finally {
     connection.release();
   }
@@ -159,7 +112,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
   const connection = await pool.getConnection();
   try {
-    const [patientRows] = await connection.execute<PatientRow[]>(
+    const [patientRows]: any = await connection.execute(
       `SELECT patient_id, first_name, last_name
        FROM patient
        WHERE phone_number = ?`,
@@ -172,7 +125,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
     const patient = patientRows[0];
 
-    const [visitRows] = await connection.execute<VisitRow[]>(
+    const [visitRows]: any = await connection.execute(
       `SELECT visit_id
        FROM visit
        WHERE patient_id = ? AND visit_date = CURDATE()
@@ -187,7 +140,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 
     const visitId = visitRows[0].visit_id;
 
-    const [queueRows] = await connection.execute<QueueIdRow[]>(
+    const [queueRows]: any = await connection.execute(
       `SELECT queue_id
        FROM queue
        WHERE visit_id = ?`,
@@ -211,7 +164,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
   try {
-    const [queues] = await connection.execute<DepartmentQueueRow[]>(
+    const [queues]: any = await connection.execute(
       `SELECT 
         q.queue_id, 
         q.queue_number, 
@@ -231,7 +184,7 @@ export async function getDepartmentQueues(departmentId: number) {
       [departmentId]
     );
 
-    return queues.map((q) => ({
+    return queues.map((q: any) => ({
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,

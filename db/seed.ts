@@ -9,7 +9,7 @@ import { pool } from "../src/config/database.js";
 
 async function seed() {
   const connection = await pool.getConnection();
-  
+
   try {
     console.log("🌱 Starting database seed...");
 
@@ -92,11 +92,11 @@ async function seed() {
     // ==================== VISITS (VN260108-XXXX) ====================
     console.log("📅 Creating visits...");
     const today = new Date();
-    const yy = String(today.getFullYear()).slice(-2);  // 26
-    const mm = String(today.getMonth() + 1).padStart(2, '0');  // 01
-    const dd = String(today.getDate()).padStart(2, '0');  // 08
-    const dateStr = today.toISOString().split('T')[0];
-    
+    const yy = String(today.getFullYear()).slice(-2); // 26
+    const mm = String(today.getMonth() + 1).padStart(2, "0"); // 01
+    const dd = String(today.getDate()).padStart(2, "0"); // 08
+    const dateStr = today.toISOString().split("T")[0];
+
     // VN format: VN260108-0001
     await connection.execute(`
       INSERT INTO visit (vn, patient_id, visit_date, visit_type) VALUES
@@ -125,6 +125,8 @@ async function seed() {
 
     // ==================== QUEUES ====================
     console.log("🎫 Creating queues...");
+
+    // อายุรกรรม - 3 คิว
     
     // แก้ไข department_id ให้ตรงกับ queue prefix:
     // MED (อายุรกรรม) → department_id 7
@@ -194,11 +196,21 @@ async function seed() {
     console.log("✅ Queue status history created");
 
     // ==================== SUMMARY ====================
-    const [deptCount]: any = await connection.execute("SELECT COUNT(*) as count FROM department");
-    const [staffCount]: any = await connection.execute("SELECT COUNT(*) as count FROM staff");
-    const [patientCount]: any = await connection.execute("SELECT COUNT(*) as count FROM patient");
-    const [visitCount]: any = await connection.execute("SELECT COUNT(*) as count FROM visit");
-    const [queueCount]: any = await connection.execute("SELECT COUNT(*) as count FROM queue");
+    const [deptCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM department",
+    );
+    const [staffCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM staff",
+    );
+    const [patientCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM patient",
+    );
+    const [visitCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM visit",
+    );
+    const [queueCount]: any = await connection.execute(
+      "SELECT COUNT(*) as count FROM queue",
+    );
 
     console.log("\n✅ Seed completed successfully!\n");
     console.log("📊 Summary:");
@@ -247,35 +259,24 @@ async function seed() {
     console.log(`\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "12", "13" หรือ "VN12", "VN13"`);
     
     console.log(`\n📋 Test VN Numbers (Format: VN${yy}${mm}${dd}-XXXX):`);
-    console.log(`\n   ✅ VN ที่มีคิวแล้ว:`);
-    console.log(`   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม/MED001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม/MED002)`);
-    console.log(`   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรมทางเดินปัสสาวะ/URO001 - ข้ามคิว)`);
-    console.log(`   - VN${yy}${mm}${dd}-0004 (HN0000004 - วิภา แสนดี - สูติ-นรีเวช/OBG001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0005 (HN0000005 - สมศักดิ์ เจริญ - กุมาร/PED001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0006 (HN0000006 - อรุณี มีสุข - โรคเรื้อรัง/NCD001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0007 (HN0000007 - ประเสริฐ ดีงาม - ไตเทียม/DIA001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0011 (HN0000011 - ทดสอบ สร้างคิว1 - ทันตกรรม/DEN001)`);
-    
-    console.log(`\n   🆕 VN สำหรับทดสอบสร้างคิว (ไม่มีคิว):`);
-    console.log(`   - VN${yy}${mm}${dd}-0012 ถึง VN${yy}${mm}${dd}-0020`);
-    console.log(`\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "12", "13" หรือ "VN12", "VN13"`);
-    
-    console.log(`\n📋 Test VN Numbers (Format: VN${yy}${mm}${dd}-XXXX):`);
-    console.log(`\n   ✅ VN ที่มีคิวแล้ว:`);
-    console.log(`   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม/MED001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม/MED002)`);
-    console.log(`   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรมทางเดินปัสสาวะ/URO001 - ข้ามคิว)`);
-    console.log(`   - VN${yy}${mm}${dd}-0004 (HN0000004 - วิภา แสนดี - สูติ-นรีเวช/OBG001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0005 (HN0000005 - สมศักดิ์ เจริญ - กุมาร/PED001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0006 (HN0000006 - อรุณี มีสุข - โรคเรื้อรัง/NCD001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0007 (HN0000007 - ประเสริฐ ดีงาม - ไตเทียม/DIA001)`);
-    console.log(`   - VN${yy}${mm}${dd}-0011 (HN0000011 - ทดสอบ สร้างคิว1 - ทันตกรรม/DEN001)`);
-    
-    console.log(`\n   🆕 VN สำหรับทดสอบสร้างคิว (ไม่มีคิว):`);
-    console.log(`   - VN${yy}${mm}${dd}-0012 ถึง VN${yy}${mm}${dd}-0020`);
-    console.log(`\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "12", "13" หรือ "VN12", "VN13"`);
-    
+    console.log(`\n   ✅ VN ที่มีคิวแล้ว (1-10):`);
+    console.log(
+      `   - VN${yy}${mm}${dd}-0001 (HN0000001 - สมชาย ใจดี - อายุรกรรม)`,
+    );
+    console.log(
+      `   - VN${yy}${mm}${dd}-0002 (HN0000002 - สมหญิง รักษ์ดี - อายุรกรรม)`,
+    );
+    console.log(
+      `   - VN${yy}${mm}${dd}-0003 (HN0000003 - วิชัย สุขสันต์ - ศัลยกรรม - ข้ามคิว)`,
+    );
+    console.log(`\n   🆕 VN สำหรับทดสอบสร้างคิว (11-20):`);
+    console.log(`   - VN${yy}${mm}${dd}-0011 (HN0000011 - ทดสอบ สร้างคิว1)`);
+    console.log(`   - VN${yy}${mm}${dd}-0012 (HN0000012 - ทดสอบ สร้างคิว2)`);
+    console.log(`   - VN${yy}${mm}${dd}-0013 (HN0000013 - ทดสอบ สร้างคิว3)`);
+    console.log(`   ... ถึง VN${yy}${mm}${dd}-0020`);
+    console.log(
+      `\n   💡 Tips: สามารถกรอกแค่ตัวเลข เช่น "11", "12" หรือ "VN11", "VN12"`,
+    );
   } catch (error) {
     console.error("❌ Seed failed:", error);
     throw error;

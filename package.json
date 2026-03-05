@@ -25,7 +25,8 @@
   "contributors": [],
   "scripts": {
     "dev": "nodemon",
-    "test": "jest"
+    "test": "jest --runInBand",
+    "seed": "tsx db/seed.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

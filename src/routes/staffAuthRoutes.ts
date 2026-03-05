@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { db } from "../config/database.js";
 import * as schema from "../../db/schema.js";
 
@@ -28,11 +29,11 @@ router.post("/login", async (req: Request, res: Response) => {
     });
 
     // Validate credentials (plain text — เหมือนเดิม)
-    if (!staffUser || staffUser.password !== password) {
+    if (!staffUser || !staffUser.password || !(await bcrypt.compare(password, staffUser.password))) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
-
+    
     // Sign JWT token
     const token = jwt.sign(
       {

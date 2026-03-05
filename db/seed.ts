@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { pool } from "../src/config/database.js";
+import bcrypt from "bcrypt";
 
 /**
  * Database Seed Script
@@ -61,6 +62,12 @@ async function seed() {
     ('ห้องตรวจสุขภาพพิเศษ', 'spc', 'spc123', 'doctor', 11)
   `);
     console.log("✅ Staff accounts created");
+
+    const departments = ["uro","ped","obg","ncd","spm","dia","med","eye","den","ent","spc"];
+      for (const code of departments) {
+        const hash = await bcrypt.hash(`${code}123`, 10);
+        await connection.execute(`UPDATE staff SET password = ? WHERE username = ?`, [hash, code]);
+      }
 
     // ==================== PATIENTS (HN 7 หลัก) ====================
     console.log("🏥 Creating patients...");

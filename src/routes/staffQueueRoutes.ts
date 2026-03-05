@@ -73,6 +73,14 @@ router.post("/queue/create", async (req: Request, res: Response) => {
 
     await connection.beginTransaction();
 
+    const [patientRow]: any = await connection.execute(
+      `SELECT CONCAT(p.first_name, ' ', p.last_name) as patient_name
+      FROM visit v 
+      JOIN patient p ON v.patient_id = p.patient_id
+      WHERE v.vn = ?`,
+      [vn]
+    );
+
     // Get next queue number
     const [countResult]: any = await connection.execute(
       `SELECT COUNT(*) as count FROM queue 
@@ -107,6 +115,7 @@ router.post("/queue/create", async (req: Request, res: Response) => {
       message: "Queue created successfully",
       queueNumber,
       queueId: newQueueId,
+      patientName: patientRow[0]?.patient_name ?? "",
     });
   } catch (error) {
     await connection.rollback();
@@ -148,7 +157,7 @@ router.post("/queue/:queueId/call", async (req: Request, res: Response) => {
 
     // Update queue status
     await connection.execute(
-      `UPDATE queue SET status = 'called', called_time = NOW() 
+      `UPDATE queue SET status = 'called', called_time = NOW(), is_skipped = 0
        WHERE queue_id = ?`,
       [queueId]
     );

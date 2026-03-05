@@ -6,6 +6,7 @@ import { setupWebSocket } from "./services/websocket.js";
 import patientRoutes from "./routes/patientRoutes.js";
 import staffAuthRoutes from "./routes/staffAuthRoutes.js";
 import staffQueueRoutes from "./routes/staffQueueRoutes.js";
+import { requireStaffAuth } from "./middleware/authMiddleware.js";
 
 const app = express();
 const server = createServer(app);
@@ -35,8 +36,8 @@ app.use("/api/queue", patientRoutes);
 // Staff authentication
 app.use("/api/staff", staffAuthRoutes);
 
-// Staff queue management
-app.use("/api/staff", staffQueueRoutes);
+// Protected: Staff queue management
+app.use("/api/staff", requireStaffAuth, staffQueueRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req: Request, res: Response) => {
@@ -46,6 +47,9 @@ app.get("/api/health", (req: Request, res: Response) => {
     uptime: process.uptime()
   });
 });
+
+// Static files (e.g., images)
+app.use("/images", express.static("public"));
 
 // 404 handler
 app.use((req: Request, res: Response) => {

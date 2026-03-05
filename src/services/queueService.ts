@@ -4,13 +4,13 @@ import type { RequestHandler } from "express";
 function formatDepartmentLocation(
   building?: string,
   floor?: string,
-  room?: string
+  room?: string,
 ): string {
   const parts: string[] = [];
 
   if (building) parts.push(building);
   if (floor) parts.push(floor);
-  if (room) parts.push(`ห้อง ${room.replace(/^ห้อง\s*/i, "")}`);
+  if (room) parts.push(room);
 
   return parts.join(" ");
 }
@@ -29,19 +29,13 @@ export async function buildQueueData(queueId: number) {
         q.is_skipped, q.priority_score, q.department_id, 
         v.vn,
         CONCAT(p.first_name, ' ', p.last_name) as patient_name,
-        
-        d.department_name,
-        d.department_code,
-        d.building,
-        d.floor,
-        d.room
-      
+        d.department_name, d.department_code, d.building, d.floor, d.room, d.room_image
       FROM queue q
       JOIN visit v ON q.visit_id = v.visit_id
       JOIN patient p ON v.patient_id = p.patient_id
       JOIN department d ON q.department_id = d.department_id
       WHERE q.queue_id = ?`,
-      [queueId]
+      [queueId],
     );
 
     if (rows.length === 0) {
@@ -55,7 +49,7 @@ export async function buildQueueData(queueId: number) {
       `SELECT queue_number FROM queue
        WHERE department_id = ? AND status = 'called'
        ORDER BY called_time DESC LIMIT 1`,
-      [queueInfo.department_id]
+      [queueInfo.department_id],
     );
 
     // 3. Calculate position in queue
@@ -68,7 +62,7 @@ export async function buildQueueData(queueId: number) {
         queueInfo.priority_score,
         queueInfo.priority_score,
         queueInfo.issued_time,
-      ]
+      ],
     );
 
     const yourPosition = posRows[0].position;
@@ -77,31 +71,31 @@ export async function buildQueueData(queueId: number) {
         ? `${(yourPosition + 1) * 5}-${(yourPosition + 1) * 7} นาที`
         : "กรุณาเข้ารับบริการ";*/
 
-
-  return {
-  queueNumber: queueInfo.queue_number,
-  vn: queueInfo.vn,
-  patientName: queueInfo.patient_name,
-
-  department: queueInfo.department_name,
-  departmentCode: queueInfo.department_code,  // เพิ่มมาเพื่อแสดงรหัสแผนก
-
-  departmentLocation: formatDepartmentLocation(
-    queueInfo.building,
-    queueInfo.floor,
-    queueInfo.room
-  ),
-
-  status: queueInfo.status,
-  currentQueue: currentRows[0]?.queue_number || queueInfo.queue_number,
-  yourPosition: Math.max(0, yourPosition),
-  issuedTime: new Date(queueInfo.issued_time).toLocaleTimeString("th-TH", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }),
-  priorityScore: queueInfo.priority_score,
-  isSkipped: Boolean(queueInfo.is_skipped),
-  };
+    return {
+      queueNumber: queueInfo.queue_number,
+      vn: queueInfo.vn,
+      patientName: queueInfo.patient_name,
+      department: queueInfo.department_name,
+      departmentCode: queueInfo.department_code,
+      roomImage: queueInfo.room_image ?? null,
+      departmentLocation: formatDepartmentLocation(
+        queueInfo.building,
+        queueInfo.floor,
+        queueInfo.room,
+      ),
+      building: queueInfo.building,
+      floor: queueInfo.floor,
+      room: queueInfo.room,
+      status: queueInfo.status,
+      currentQueue: currentRows[0]?.queue_number || queueInfo.queue_number,
+      yourPosition: Math.max(0, yourPosition),
+      issuedTime: new Date(queueInfo.issued_time).toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      priorityScore: queueInfo.priority_score,
+      isSkipped: Boolean(queueInfo.is_skipped),
+    };
   } finally {
     connection.release();
   }
@@ -116,11 +110,12 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
       `SELECT patient_id, first_name, last_name
        FROM patient
        WHERE phone_number = ?`,
-      [phone]
+      [phone],
     );
 
     if (patientRows.length === 0) {
-      return res.status(404).json({ error: "Phone number not found" });
+      res.status(404).json({ error: "Phone number not found" });
+      return;
     }
 
     const patient = patientRows[0];
@@ -131,11 +126,12 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
        WHERE patient_id = ? AND visit_date = CURDATE()
        ORDER BY created_at DESC
        LIMIT 1`,
-      [patient.patient_id]
+      [patient.patient_id],
     );
 
     if (visitRows.length === 0) {
-      return res.status(404).json({ error: "No visit found for today" });
+      res.status(404).json({ error: "No visit found for today" });
+      return;
     }
 
     const visitId = visitRows[0].visit_id;
@@ -144,15 +140,16 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
       `SELECT queue_id
        FROM queue
        WHERE visit_id = ?`,
-      [visitId]
+      [visitId],
     );
 
     if (queueRows.length === 0) {
-      return res.status(404).json({ error: "Queue not found" });
+      res.status(404).json({ error: "Queue not found" });
+      return;
     }
 
     const queueData = await buildQueueData(queueRows[0].queue_id);
-    return res.json(queueData);
+    res.json(queueData);
   } finally {
     connection.release();
   }
@@ -164,12 +161,19 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
 export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
   try {
+    // เช็ค timezone ก่อน
+    const [tzCheck]: any = await connection.execute(
+      `SELECT NOW() as now, CURDATE() as today, @@session.time_zone as tz`
+    );
+    
     const [queues]: any = await connection.execute(
       `SELECT 
         q.queue_id, 
         q.queue_number, 
         q.status, 
-        q.issued_time, 
+        q.issued_time,
+        DATE(q.issued_time) as issued_date,
+        CURDATE() as current_date_value,
         q.skipped_time,
         q.is_skipped, 
         q.priority_score,
@@ -179,16 +183,23 @@ export async function getDepartmentQueues(departmentId: number) {
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
-       WHERE q.department_id = ? AND DATE(q.issued_time) = CURDATE()
+       WHERE q.department_id = ?
        ORDER BY q.priority_score DESC, q.issued_time ASC`,
-      [departmentId]
+      [departmentId],
     );
 
-    return queues.map((q: any) => ({
+    // กรองด้วย JavaScript แทน
+    const todayQueues = queues.filter((q: any) => {
+      const issuedDate = new Date(q.issued_time).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      return issuedDate === today;
+    });
+
+    return todayQueues.map((q: any) => ({
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,
-      phoneNumber: q.phone_number || 'ไม่มีข้อมูล',
+      phoneNumber: q.phone_number || "ไม่มีข้อมูล",
       vn: q.vn,
       status: q.status,
       issuedTime: new Date(q.issued_time).toLocaleTimeString("th-TH", {
@@ -197,7 +208,7 @@ export async function getDepartmentQueues(departmentId: number) {
       }),
       isSkipped: Boolean(q.is_skipped),
       priorityScore: q.priority_score,
-      skippedTime: q.skipped_time || null,
+      skippedTime: q.skipped_time_formatted || null,
     }));
   } finally {
     connection.release();

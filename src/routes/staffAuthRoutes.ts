@@ -1,9 +1,12 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
+import jwt from "jsonwebtoken";
 import { db } from "../config/database.js";
 import * as schema from "../../db/schema.js";
 
 const router = Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || "nakornping-secret-key-2026"; // Default
 
 /**
  * POST /api/staff/login
@@ -24,15 +27,27 @@ router.post("/login", async (req: Request, res: Response) => {
       with: { department: true },
     });
 
-    // Validate credentials
+    // Validate credentials (plain text — เหมือนเดิม)
     if (!staffUser || staffUser.password !== password) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
 
-    // Return staff information
+    // Sign JWT token
+    const token = jwt.sign(
+      {
+        staffId: staffUser.staffId,
+        role: staffUser.role,
+        departmentId: staffUser.departmentId,
+      },
+      JWT_SECRET,
+      { expiresIn: "8h" } as jwt.SignOptions
+    );
+
+    // Return staff information + token
     res.json({
       success: true,
+      token,
       staffId: staffUser.staffId,
       staffName: staffUser.staffName,
       role: staffUser.role,

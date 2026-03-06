@@ -31,7 +31,7 @@ router.get("/queues/:departmentId", async (req: Request, res: Response) => {
 router.post("/queue/create", async (req: Request, res: Response) => {
   const connection = await pool.getConnection();
   try {
-    const { vn, staffId } = req.body;
+    const { vn, staffId, priorityScore = 0 } = req.body;
 
     if (!vn || !staffId) {
       res.status(400).json({ error: "VN and staffId required" });
@@ -95,8 +95,8 @@ router.post("/queue/create", async (req: Request, res: Response) => {
     // Insert new queue
     const [insertResult] = await connection.execute<ResultSetHeader>(
       `INSERT INTO queue (queue_number, visit_id, department_id, queue_token, status, issued_time, is_skipped, priority_score) 
-       VALUES (?, ?, ?, ?, 'waiting', NOW(), 0, 0)`,
-      [queueNumber, visit.visitId, departmentId, randomUUID()]
+       VALUES (?, ?, ?, ?, 'waiting', NOW(), 0, ?)`,
+      [queueNumber, visit.visitId, departmentId, randomUUID(), priorityScore]
     );
 
     const newQueueId = insertResult.insertId;
@@ -276,10 +276,10 @@ router.post("/queue/:queueId/skip", async (req: Request, res: Response) => {
 
     const { vn, status: oldStatus, queue_number, phone_number, first_name, last_name } = rows[0];
 
-    // Mark as skipped and increase priority
+    // Mark as skipped 
     await connection.execute(
       `UPDATE queue 
-       SET is_skipped = 1, status = 'waiting', priority_score = priority_score + 50, skipped_time = NOW()
+       SET is_skipped = 1, status = 'waiting', skipped_time = NOW()
        WHERE queue_id = ?`,
       [queueId]
     );

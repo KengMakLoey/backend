@@ -184,7 +184,7 @@ export async function getDepartmentQueues(departmentId: number) {
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
        WHERE q.department_id = ?
-       ORDER BY q.priority_score DESC, q.issued_time ASC`,
+       ORDER BY q.issued_time ASC`,
       [departmentId],
     );
 

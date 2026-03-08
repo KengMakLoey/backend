@@ -83,13 +83,13 @@ router.post("/queue/create", async (req: Request, res: Response) => {
 
     // Get next queue number
     const [countResult]: any = await connection.execute(
-      `SELECT COUNT(*) as count FROM queue 
-       WHERE department_id = ? AND DATE(issued_time) = CURDATE() 
-       FOR UPDATE`,
-      [departmentId]
-    );
-
-    const nextNum = (countResult[0]?.count || 0) + 1;
+    `SELECT MAX(CAST(SUBSTRING(queue_number, CHAR_LENGTH(?) + 1) AS UNSIGNED)) as maxNum
+    FROM queue
+    WHERE department_id = ? AND DATE(issued_time) = CURDATE()
+    FOR UPDATE`,
+    [departmentCode, departmentId]
+  );
+  const nextNum = (countResult[0]?.maxNum || 0) + 1;
     const queueNumber = `${departmentCode}${String(nextNum).padStart(3, "0")}`;
 
     // Insert new queue

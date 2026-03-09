@@ -38,6 +38,7 @@ router.post("/login", async (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         staffId: staffUser.staffId,
+        staffName: staffUser.staffName,
         role: staffUser.role,
         departmentId: staffUser.departmentId,
       },

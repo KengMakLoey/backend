@@ -62,16 +62,16 @@ router.post("/queue/create", async (req: Request, res: Response) => {
     }
 
     // Check if queue already exists
-    const existing = await db.query.queue.findFirst({
-      where: eq(schema.queue.visitId, visit.visitId),
-    });
-
-    if (existing) {
+    await connection.beginTransaction();
+    const [existingRows]: any = await connection.execute(
+      `SELECT queue_id FROM queue WHERE visit_id = ? FOR UPDATE`,
+      [visit.visitId]
+    );
+    if (existingRows.length > 0) {
+      await connection.rollback();
       res.status(400).json({ error: "Queue already exists for this visit" });
       return;
     }
-
-    await connection.beginTransaction();
 
     const [patientRow]: any = await connection.execute(
       `SELECT CONCAT(p.first_name, ' ', p.last_name) as patient_name
@@ -140,7 +140,7 @@ router.post("/queue/:queueId/call", async (req: Request, res: Response) => {
 
     // Get VN for broadcasting
     const [rows]: any = await connection.execute(
-      `SELECT v.vn, q.status, q.queue_number 
+      `SELECT v.vn, q.status, q.queue_number, q.department_id
        FROM queue q 
        JOIN visit v ON q.visit_id = v.visit_id 
        WHERE q.queue_id = ?`,
@@ -153,8 +153,19 @@ router.post("/queue/:queueId/call", async (req: Request, res: Response) => {
       return;
     }
 
-    const { vn, status: oldStatus, queue_number } = rows[0];
-
+    const { department_id, vn, status: oldStatus, queue_number } = rows[0]; 
+ 
+    const [activeRows]: any = await connection.execute(
+      `SELECT queue_id FROM queue
+        WHERE department_id = ? AND status IN ('called', 'in_progress') AND queue_id != ?`,
+      [department_id, queueId]
+    );
+    if (activeRows.length > 0) {
+      await connection.rollback();
+      res.status(409).json({ error: "Another queue is already active in this department" });
+      return;
+    }
+   
     // Update queue status
     await connection.execute(
       `UPDATE queue SET status = 'called', called_time = NOW(), is_skipped = 0

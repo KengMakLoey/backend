@@ -160,12 +160,7 @@ export const getQueueByPhone: RequestHandler = async (req, res) => {
  */
 export async function getDepartmentQueues(departmentId: number) {
   const connection = await pool.getConnection();
-  try {
-    // เช็ค timezone ก่อน
-    const [tzCheck]: any = await connection.execute(
-      `SELECT NOW() as now, CURDATE() as today, @@session.time_zone as tz`
-    );
-    
+  try {    
     const [queues]: any = await connection.execute(
       `SELECT 
         q.queue_id, 

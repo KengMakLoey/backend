@@ -208,7 +208,11 @@ export async function getDepartmentQueues(departmentId: number) {
       }),
       isSkipped: Boolean(q.is_skipped),
       priorityScore: q.priority_score,
-      skippedTime: q.skipped_time_formatted || null,
+      skippedTime: q.skipped_time ? new Date(q.skipped_time).toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Bangkok",
+      }) : null,
     }));
   } finally {
     connection.release();

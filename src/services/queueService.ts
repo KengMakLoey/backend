@@ -167,8 +167,6 @@ export async function getDepartmentQueues(departmentId: number) {
         q.queue_number, 
         q.status, 
         q.issued_time,
-        DATE(q.issued_time) as issued_date,
-        CURDATE() as current_date_value,
         q.skipped_time,
         q.is_skipped, 
         q.priority_score,
@@ -178,19 +176,12 @@ export async function getDepartmentQueues(departmentId: number) {
        FROM queue q
        JOIN visit v ON q.visit_id = v.visit_id
        JOIN patient p ON v.patient_id = p.patient_id
-       WHERE q.department_id = ?
+       WHERE q.department_id = ? AND DATE(q.issued_time) = CURDATE()
        ORDER BY q.issued_time ASC`,
       [departmentId],
     );
 
-    // กรองด้วย JavaScript แทน
-    const todayQueues = queues.filter((q: any) => {
-      const issuedDate = new Date(q.issued_time).toISOString().split('T')[0];
-      const today = new Date().toISOString().split('T')[0];
-      return issuedDate === today;
-    });
-
-    return todayQueues.map((q: any) => ({
+    return queues.map((q: any) => ({
       queueId: q.queue_id,
       queueNumber: q.queue_number,
       patientName: q.patient_name,
